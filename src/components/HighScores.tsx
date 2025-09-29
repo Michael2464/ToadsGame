@@ -8,8 +8,8 @@ interface HighScore {
 
 const HighScores: React.FC<{ scores: HighScore[] }> = ({ scores }) => (
   <div className="mt-4">
-    <h2 className="text-2xl font-bold mb-2">Лучшая статистика</h2>
-    <ul className="list-disc pl-5">
+    <h2 className="text-3xl font-bold mb-2">Лучшая статистика</h2>
+    <ul className="text-xl pl-5">
       {scores.map((score, index) => (
         <li key={index}>
           Ходов: {score.moves}, Время: {Math.floor(score.time / 60)}:

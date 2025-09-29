@@ -5,7 +5,7 @@ const WinScreen: React.FC<{
   time: number;
   onRestart: () => void;
 }> = ({ moves, time, onRestart }) => (
-  <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div className="fixed z-10 inset-0 bg-black bg-opacity-50 flex items-center justify-center">
     <div className="bg-white p-8 rounded-lg text-center">
       <h2 className="text-3xl font-bold mb-4">Поздравляем!</h2>
       <p>Ходов: {moves}</p>
