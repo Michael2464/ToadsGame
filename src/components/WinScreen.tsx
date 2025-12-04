@@ -8,7 +8,9 @@ const WinScreen: React.FC<{
 }> = ({ moves, time, onRestart, onBackToMenu }) => (
   <div className="fixed z-50 inset-0 bg-black bg-opacity-70 flex items-center justify-center backdrop-blur-sm p-2">
     <div className="bg-gradient-to-br from-green-400 to-green-600 p-4 sm:p-6 md:p-8 rounded-2xl text-center shadow-2xl max-w-md mx-2 sm:mx-4 animate-scale-in">
-      <div className="text-5xl sm:text-6xl md:text-8xl mb-3 sm:mb-4 animate-bounce">🎉</div>
+      <div className="text-5xl sm:text-6xl md:text-8xl mb-3 sm:mb-4 animate-bounce">
+        🎉
+      </div>
       <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6 text-white drop-shadow-lg">
         Поздравляем!
       </h2>
@@ -19,8 +21,7 @@ const WinScreen: React.FC<{
         <p className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
           Времени:{" "}
           <span className="text-yellow-200">
-            {Math.floor(time / 60)}:
-            {(time % 60).toString().padStart(2, "0")}
+            {Math.floor(time / 60)}:{(time % 60).toString().padStart(2, "0")}
           </span>
         </p>
       </div>

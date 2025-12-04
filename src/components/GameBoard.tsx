@@ -12,7 +12,13 @@ const GameBoard: React.FC<{
   animatingFrogIndex?: number | null;
   animatingFromPosition?: number | null;
   animatingToPosition?: number | null;
-}> = ({ frogs, onFrogClick, animatingFrogIndex = null, animatingFromPosition = null, animatingToPosition = null }) => {
+}> = ({
+  frogs,
+  onFrogClick,
+  animatingFrogIndex = null,
+  animatingFromPosition = null,
+  animatingToPosition = null,
+}) => {
   const [animationDistance, setAnimationDistance] = useState(70);
 
   useEffect(() => {
@@ -31,28 +37,33 @@ const GameBoard: React.FC<{
     };
 
     updateDistance();
-    window.addEventListener('resize', updateDistance);
-    return () => window.removeEventListener('resize', updateDistance);
+    window.addEventListener("resize", updateDistance);
+    return () => window.removeEventListener("resize", updateDistance);
   }, []);
   const stones = Array(7)
     .fill(null)
     .map((_, i) => {
       const frog = frogs.find((f) => f.position === i);
       const frogIndex = frog ? frogs.indexOf(frog) : -1;
-      const isAnimatingThisFrog = animatingFromPosition === i && animatingFrogIndex !== null;
+      const isAnimatingThisFrog =
+        animatingFromPosition === i && animatingFrogIndex !== null;
       const isAnimatingToThis = animatingToPosition === i && !frog;
-      
-      // Calculate animation position (will be updated in return with responsive distance)
+
       let animationStyle: React.CSSProperties = {};
 
-      // Calculate animation position with responsive distance
-      if (isAnimatingThisFrog && animatingFromPosition !== null && animatingToPosition !== null) {
+      if (
+        isAnimatingThisFrog &&
+        animatingFromPosition !== null &&
+        animatingToPosition !== null
+      ) {
         const currentPos = animatingFromPosition;
         const targetPos = animatingToPosition;
         const direction = targetPos > currentPos ? 1 : -1;
         const distance = Math.abs(targetPos - currentPos);
         animationStyle = {
-          transform: `translateX(${direction * distance * animationDistance}px) scale(1.1)`,
+          transform: `translateX(${
+            direction * distance * animationDistance
+          }px) scale(1.1)`,
           transition: "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
           zIndex: 20,
         };
@@ -62,7 +73,7 @@ const GameBoard: React.FC<{
         <div
           key={i}
           className="relative w-11 h-11 xs:w-12 xs:h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 mx-0 xs:mx-0.5 sm:mx-0.5 md:mx-1 lg:mx-2 z-[10] touch-manipulation cursor-pointer flex-shrink-0"
-          style={{ minWidth: '44px' }}
+          style={{ minWidth: "44px" }}
         >
           {/* Stone visualization */}
           <div className="absolute inset-0 flex items-center justify-center">
@@ -76,7 +87,7 @@ const GameBoard: React.FC<{
               <div className="absolute top-0 left-0 right-0 h-1/3 bg-gradient-to-b from-stone-300/20 to-transparent rounded-t-lg"></div>
             </div>
           </div>
-          
+
           {/* Frog container */}
           <div
             className="relative w-11 h-11 xs:w-12 xs:h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 lg:w-20 lg:h-20 xl:w-24 xl:h-24 flex items-center justify-center z-[15] transition-all"
