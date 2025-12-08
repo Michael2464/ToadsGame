@@ -34,9 +34,15 @@ const Game: React.FC = () => {
   const [isGameWon, setIsGameWon] = useState(false);
   const [isGameStarted, setIsGameStarted] = useState(false);
   const [isAnimating, setIsAnimating] = useState(false);
-  const [animatingFrogIndex, setAnimatingFrogIndex] = useState<number | null>(null);
-  const [animatingFromPosition, setAnimatingFromPosition] = useState<number | null>(null);
-  const [animatingToPosition, setAnimatingToPosition] = useState<number | null>(null);
+  const [animatingFrogIndex, setAnimatingFrogIndex] = useState<number | null>(
+    null
+  );
+  const [animatingFromPosition, setAnimatingFromPosition] = useState<
+    number | null
+  >(null);
+  const [animatingToPosition, setAnimatingToPosition] = useState<number | null>(
+    null
+  );
   const soundRef = useRef<HTMLAudioElement | null>(null);
   const [highScores, setHighScores] = useState<HighScore[]>(() => {
     const saved = localStorage.getItem("highScores");
@@ -44,11 +50,11 @@ const Game: React.FC = () => {
   });
 
   useEffect(() => {
-    soundRef.current = new Audio("/single_frog_croak.mp3");
-    soundRef.current.volume = 0.5;
+    soundRef.current = new Audio("./single_frog_croak.mp3");
+    soundRef.current.volume = 1.0;
     return () => {
       if (soundRef.current) {
-        soundRef.current.pause();
+        soundRef.current.play();
         soundRef.current = null;
       }
     };
@@ -86,7 +92,7 @@ const Game: React.FC = () => {
 
   const handleFrogClick = (index: number) => {
     if (isAnimating || isGameWon || !isGameStarted) return;
-    
+
     const frog = frogs[index];
     const newFrogs = [...frogs];
     let newPosition: number | null = null;
@@ -116,13 +122,13 @@ const Game: React.FC = () => {
       setAnimatingFrogIndex(index);
       setAnimatingFromPosition(frog.position);
       setAnimatingToPosition(newPosition);
-      
+
       // Play sound
       if (soundRef.current) {
         soundRef.current.currentTime = 0;
         soundRef.current.play().catch(() => {});
       }
-      
+
       // Animate movement
       setTimeout(() => {
         newFrogs[index] = { ...frog, position: newPosition! };
@@ -166,7 +172,9 @@ const Game: React.FC = () => {
   return (
     <div className="text-center p-2 sm:p-4">
       {!isGameStarted && <StartScreen onStart={handleStart} />}
-      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">Жабы (Игра)</h1>
+      <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 sm:mb-4">
+        Жабы (Игра)
+      </h1>
       <div className="flex justify-center space-x-2 sm:space-x-4 mb-2 sm:mb-4 flex-wrap gap-2">
         <MoveCounter moves={moves} />
         <Timer time={time} />
@@ -194,7 +202,12 @@ const Game: React.FC = () => {
       </div>
       <HighScores scores={highScores} />
       {isGameWon && (
-        <WinScreen moves={moves} time={time} onRestart={handleRestart} onBackToMenu={handleBackToMenu} />
+        <WinScreen
+          moves={moves}
+          time={time}
+          onRestart={handleRestart}
+          onBackToMenu={handleBackToMenu}
+        />
       )}
     </div>
   );
