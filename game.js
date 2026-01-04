@@ -36,6 +36,81 @@ const winTimeEl = document.getElementById("win-time");
 const scoresListEl = document.getElementById("scores-list");
 const croakSound = document.getElementById("croak-sound");
 
+function updateScale() {
+  const gameBoard = document.querySelector(".game-board");
+  if (!gameBoard) return;
+
+  // Временно убираем transform для получения реальных размеров
+  const currentTransform = gameBoard.style.transform;
+  gameBoard.style.transform = '';
+  
+  // Получаем реальные размеры game-board
+  const baseWidth = gameBoard.offsetWidth || 900;
+  const baseHeight = gameBoard.offsetHeight || 200;
+  
+  // Получаем реальную ширину контента (камни с жабами)
+  const stonesContainer = document.getElementById("stones-container");
+  let contentWidth = baseWidth;
+  if (stonesContainer) {
+    const stones = stonesContainer.querySelectorAll(".stone");
+    if (stones.length > 0) {
+      // Считаем реальную ширину: сумма всех камней + gaps
+      let totalStonesWidth = 0;
+      stones.forEach(stone => {
+        totalStonesWidth += stone.offsetWidth || 100;
+      });
+      // Добавляем gaps (0.25rem между камнями, 6 gaps для 7 камней)
+      const gapSize = parseFloat(getComputedStyle(stonesContainer).gap) || 4;
+      const gapsWidth = gapSize * (stones.length - 1);
+      // Добавляем padding контейнера (0.5rem с каждой стороны)
+      const containerPadding = parseFloat(getComputedStyle(stonesContainer).paddingLeft) || 8;
+      contentWidth = totalStonesWidth + gapsWidth + (containerPadding * 2);
+    }
+  }
+  
+  // Восстанавливаем transform
+  gameBoard.style.transform = currentTransform;
+
+  // Доступное пространство viewport
+  const viewportWidth = window.innerWidth;
+  const viewportHeight = window.innerHeight;
+  
+  // Вычитаем место для других элементов
+  // Заголовок, статистика, кнопки, high scores, padding
+  let reservedVerticalSpace = 350;
+  let reservedHorizontalSpace = 20; // уменьшаем для узких экранов
+  
+  if (viewportWidth < 640) {
+    reservedVerticalSpace = 250;
+    reservedHorizontalSpace = 16;
+  }
+  if (viewportWidth < 480) {
+    reservedVerticalSpace = 200;
+    reservedHorizontalSpace = 12;
+  }
+  if (viewportWidth < 360) {
+    reservedVerticalSpace = 180;
+    reservedHorizontalSpace = 8;
+  }
+  
+  const availableWidth = Math.max(viewportWidth - reservedHorizontalSpace, 100);
+  const availableHeight = Math.max(viewportHeight - reservedVerticalSpace, 100);
+
+  // Используем реальную ширину контента для расчета масштаба по ширине
+  const scaleX = availableWidth / contentWidth;
+  const scaleY = availableHeight / baseHeight;
+  
+  // Берем минимальный масштаб, чтобы все поместилось и было видно
+  const scale = Math.min(scaleX, scaleY, 1); // не масштабируем больше 100%
+
+  // Применяем масштаб
+  gameBoard.style.transform = `scale(${scale})`;
+  gameBoard.style.transformOrigin = "center top";
+  
+  // Сохраняем масштаб в CSS переменной для использования в других местах
+  document.documentElement.style.setProperty('--game-scale', scale);
+}
+
 function checkScreenSize() {
   initializeGame();
 
@@ -48,11 +123,16 @@ function checkScreenSize() {
     if (startScreen) startScreen.classList.add("hidden");
     if (winScreen && !isGameWon) winScreen.classList.add("hidden");
     renderBoard();
+    updateScale();
     // Прокрутка к игровому полю на маленьких экранах
     setTimeout(() => {
-      const gameBoard = document.querySelector('.game-board');
+      const gameBoard = document.querySelector(".game-board");
       if (gameBoard) {
-        gameBoard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+        gameBoard.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+          inline: "center",
+        });
       }
     }, 100);
   } else if (startScreen) {
@@ -60,6 +140,8 @@ function checkScreenSize() {
     if (gameContainer) gameContainer.classList.add("hidden");
     if (winScreen) winScreen.classList.add("hidden");
   }
+  
+  updateScale();
 }
 
 function initializeGame() {
@@ -72,8 +154,12 @@ function initializeGame() {
 }
 
 function init() {
-  window.addEventListener("resize", checkScreenSize);
+  window.addEventListener("resize", () => {
+    checkScreenSize();
+    updateScale();
+  });
   checkScreenSize();
+  updateScale();
 }
 
 function setupEventListeners() {
@@ -95,12 +181,18 @@ function handleStart() {
   }
   startTimer();
   renderBoard();
+  updateScale();
   // Прокрутка к игровому полю на маленьких экранах
   setTimeout(() => {
-    const gameBoard = document.querySelector('.game-board');
+    const gameBoard = document.querySelector(".game-board");
     if (gameBoard) {
-      gameBoard.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      gameBoard.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+        inline: "center",
+      });
     }
+    updateScale();
   }, 100);
 }
 
@@ -242,16 +334,14 @@ function handleFrogClick(index) {
 }
 
 function getAnimationDistance() {
-  const width = window.innerWidth;
-  if (width <= 300) return 8;
-  if (width <= 320) return 10;
-  if (width <= 360) return 12;
-  if (width < 375) return 15;
-  if (width < 480) return 20;
-  if (width < 640) return 35;
-  if (width < 768) return 50;
-  if (width < 1024) return 70;
-  return 115;
+  // Базовое расстояние для desktop (масштаб 1:1)
+  const baseDistance = 115;
+  
+  // Получаем текущий масштаб из CSS переменной или вычисляем его
+  const scale = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--game-scale')) || 1;
+  
+  // Возвращаем расстояние с учетом масштаба
+  return baseDistance * scale;
 }
 
 function checkWinCondition() {
@@ -341,9 +431,6 @@ function renderHighScores() {
 function renderBoard() {
   stonesContainer.innerHTML = "";
 
-  // Прокрутка к центру после рендера на маленьких экранах
-  const isSmallScreen = window.innerWidth <= 360 || window.innerHeight <= 50;
-  
   for (let i = 0; i < 7; i++) {
     const stone = document.createElement("div");
     stone.className = "stone";
@@ -388,7 +475,7 @@ function renderBoard() {
         frogEl.classList.add("animating");
         frogEl.style.transform = `translateX(${
           direction * distance * animationDistance
-        }px) scale(1.1)`;
+        }px) scale(1)`;
         frogEl.style.zIndex = "20";
       }
 
@@ -427,15 +514,7 @@ function renderBoard() {
     stonesContainer.appendChild(stone);
   }
   
-  // Прокрутка к центру игрового поля на маленьких экранах
-  if (isSmallScreen && isGameStarted) {
-    setTimeout(() => {
-      const gameBoard = document.querySelector('.game-board');
-      if (gameBoard) {
-        gameBoard.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-      }
-    }, 50);
-  }
+  updateScale();
 }
 
 document.addEventListener("DOMContentLoaded", init);
