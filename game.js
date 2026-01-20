@@ -35,6 +35,10 @@ const winMovesEl = document.getElementById("win-moves");
 const winTimeEl = document.getElementById("win-time");
 const scoresListEl = document.getElementById("scores-list");
 const croakSound = document.getElementById("croak-sound");
+const playerNameInput = document.getElementById("player-name");
+const saveScoreBtn = document.getElementById("save-score-btn");
+const saveHintEl = document.getElementById("save-hint");
+let isScoreSavedForThisWin = false;
 
 function updateScale() {
   const gameBoard = document.querySelector(".game-board");
@@ -168,6 +172,15 @@ function setupEventListeners() {
   menuBtn.addEventListener("click", handleBackToMenu);
   winRestartBtn.addEventListener("click", handleRestart);
   winMenuBtn.addEventListener("click", handleBackToMenu);
+
+  if (saveScoreBtn) {
+    saveScoreBtn.addEventListener("click", handleSaveScore);
+  }
+  if (playerNameInput) {
+    playerNameInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") handleSaveScore();
+    });
+  }
 }
 
 function handleStart() {
@@ -202,6 +215,7 @@ function handleRestart() {
   time = 0;
   isGameWon = false;
   isAnimating = false;
+  isScoreSavedForThisWin = false;
   animatingFrogIndex = null;
   animatingFromPosition = null;
   animatingToPosition = null;
@@ -223,6 +237,7 @@ function handleBackToMenu() {
   isGameWon = false;
   isGameStarted = false;
   isAnimating = false;
+  isScoreSavedForThisWin = false;
   animatingFrogIndex = null;
   animatingFromPosition = null;
   animatingToPosition = null;
@@ -304,15 +319,14 @@ function handleFrogClick(index) {
     const animationDistance = getAnimationDistance();
     const direction = newPosition > frog.position ? 1 : -1;
     const distance = Math.abs(newPosition - frog.position);
+    const jumpX = direction * distance * animationDistance;
 
     // Animate the frog
     const frogElement = document.querySelector(`[data-frog-index="${index}"]`);
     if (frogElement) {
-      frogElement.classList.add("animating");
-      frogElement.style.transform = `translateX(${
-        direction * distance * animationDistance
-      }px) scale(1.1)`;
-      frogElement.style.zIndex = "20";
+      frogElement.style.setProperty("--jump-x", `${jumpX}px`);
+      frogElement.classList.add("jumping");
+      frogElement.style.zIndex = "100";
     }
 
     renderBoard(); // Render to show target highlight
@@ -329,7 +343,7 @@ function handleFrogClick(index) {
       updateStats();
       renderBoard();
       checkWinCondition();
-    }, 300);
+    }, 400);
   }
 }
 
@@ -357,7 +371,6 @@ function checkWinCondition() {
   if (isWon && !isGameWon) {
     isGameWon = true;
     clearInterval(timerInterval);
-    saveHighScore();
     showWinScreen();
   }
 }
@@ -366,6 +379,14 @@ function showWinScreen() {
   winMovesEl.textContent = moves;
   winTimeEl.textContent = formatTime(time);
   winScreen.classList.remove("hidden");
+  isScoreSavedForThisWin = false;
+  if (playerNameInput) {
+    playerNameInput.value = "";
+    setTimeout(() => playerNameInput.focus(), 50);
+  }
+  if (saveHintEl) {
+    saveHintEl.textContent = "Результат сохраняется после ввода имени.";
+  }
 }
 
 function loadHighScores() {
@@ -373,8 +394,33 @@ function loadHighScores() {
   highScores = saved ? JSON.parse(saved) : [];
 }
 
-function saveHighScore() {
+function normalizePlayerName(name) {
+  const cleaned = (name || "").trim().replace(/\s+/g, " ");
+  if (!cleaned) return "";
+  return cleaned.slice(0, 20);
+}
+
+function handleSaveScore() {
+  if (!isGameWon || isScoreSavedForThisWin) return;
+  const name = normalizePlayerName(playerNameInput ? playerNameInput.value : "");
+  if (!name) {
+    if (saveHintEl) saveHintEl.textContent = "Введите имя (не пустое), чтобы сохранить.";
+    if (playerNameInput) playerNameInput.focus();
+    return;
+  }
+  saveHighScore(name);
+  isScoreSavedForThisWin = true;
+  if (saveHintEl) saveHintEl.textContent = "Сохранено!";
+  
+  // Автоматически начинаем новую игру после сохранения
+  setTimeout(() => {
+    handleRestart();
+  }, 500);
+}
+
+function saveHighScore(playerName) {
   const newScore = {
+    name: playerName,
     moves: moves,
     time: time,
     date: new Date().toLocaleString(),
@@ -396,6 +442,7 @@ function renderHighScores() {
 
   scoresListEl.innerHTML = highScores
     .map((score, index) => {
+      const playerName = normalizePlayerName(score.name) || "Без имени";
       let rankClass = "";
       let rankEmoji = `${index + 1}.`;
 
@@ -415,6 +462,7 @@ function renderHighScores() {
                 <div class="score-left">
                     <span class="score-rank">${rankEmoji}</span>
                     <div class="score-info">
+                        <span class="score-name">${playerName}</span>
                         <span class="score-moves">${score.moves} ходов</span>
                         <span class="score-time">${formatTime(
                           score.time
@@ -430,6 +478,20 @@ function renderHighScores() {
 
 function renderBoard() {
   stonesContainer.innerHTML = "";
+  
+  // Создаем отдельный контейнер для жаб поверх всех камней
+  let frogsContainer = document.getElementById("frogs-container");
+  if (!frogsContainer) {
+    frogsContainer = document.createElement("div");
+    frogsContainer.id = "frogs-container";
+    frogsContainer.className = "frogs-container";
+    const gameBoard = document.querySelector(".game-board");
+    if (gameBoard) {
+      gameBoard.appendChild(frogsContainer);
+    }
+  } else {
+    frogsContainer.innerHTML = "";
+  }
 
   for (let i = 0; i < 7; i++) {
     const stone = document.createElement("div");
@@ -445,6 +507,11 @@ function renderBoard() {
             </div>
         `;
 
+    stonesContainer.appendChild(stone);
+  }
+  
+  // Теперь рендерим всех жаб в отдельном слое поверх камней
+  for (let i = 0; i < 7; i++) {
     // Find frog at this position
     const frogIndex = frogs.findIndex((f) => f.position === i);
     const frog = frogIndex !== -1 ? frogs[frogIndex] : null;
@@ -456,6 +523,7 @@ function renderBoard() {
 
     const frogContainer = document.createElement("div");
     frogContainer.className = "frog-container";
+    frogContainer.dataset.position = i;
 
     if (frog) {
       const frogEl = document.createElement("div");
@@ -471,16 +539,35 @@ function renderBoard() {
         const direction = animatingToPosition > animatingFromPosition ? 1 : -1;
         const distance = Math.abs(animatingToPosition - animatingFromPosition);
         const animationDistance = getAnimationDistance();
+        const jumpX = direction * distance * animationDistance;
 
-        frogEl.classList.add("animating");
-        frogEl.style.transform = `translateX(${
-          direction * distance * animationDistance
-        }px) scale(1)`;
-        frogEl.style.zIndex = "20";
+        frogEl.style.setProperty("--jump-x", `${jumpX}px`);
+        frogEl.classList.add("jumping");
+        frogEl.style.zIndex = "100";
       }
 
+      // Создаем реалистичную модель жабы
       frogEl.innerHTML = `
-                <span class="frog-emoji">🐸</span>
+                <div class="frog-head"></div>
+                <div class="frog-body">
+                    <div class="frog-body-main"></div>
+                    <div class="frog-body-shine"></div>
+                </div>
+                <div class="frog-eyes">
+                    <div class="frog-eye left">
+                        <div class="frog-eye-pupil"></div>
+                    </div>
+                    <div class="frog-eye right">
+                        <div class="frog-eye-pupil"></div>
+                    </div>
+                </div>
+                <div class="frog-legs">
+                    <div class="frog-leg front-left"></div>
+                    <div class="frog-leg front-right"></div>
+                    <div class="frog-leg back-left"></div>
+                    <div class="frog-leg back-right"></div>
+                </div>
+                <div class="frog-mouth"></div>
                 <span class="frog-direction ${frog.direction}">${
         frog.direction === "right" ? "→" : "←"
       }</span>
@@ -510,8 +597,7 @@ function renderBoard() {
       frogContainer.appendChild(highlight);
     }
 
-    stone.appendChild(frogContainer);
-    stonesContainer.appendChild(stone);
+    frogsContainer.appendChild(frogContainer);
   }
   
   updateScale();

@@ -35,6 +35,23 @@
     <div id="win-screen" class="win-screen hidden">
       <div class="win-content">
         <h2 class="win-title">Поздравляем!</h2>
+        <div class="win-name">
+          <label class="win-name-label" for="player-name">Ваше имя:</label>
+          <input
+            id="player-name"
+            class="win-name-input"
+            type="text"
+            maxlength="20"
+            placeholder="Например: Валера"
+            autocomplete="nickname"
+          />
+          <button id="save-score-btn" class="win-save-btn" type="button">
+            Сохранить результат
+          </button>
+          <p id="save-hint" class="win-save-hint">
+            Результат сохраняется после ввода имени.
+          </p>
+        </div>
         <div class="win-stats">
           <p class="win-stat">
             Ходов: <span id="win-moves" class="win-value">0</span>
