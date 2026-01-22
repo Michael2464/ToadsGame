@@ -917,8 +917,9 @@ body {
 /* HIGH SCORES */
 /* ===================== */
 .high-scores {
-    max-width: 600px;
+    max-width: 1200px;
     margin: 0 auto;
+    width: 100%;
 }
 
 .scores-title {
@@ -934,12 +935,51 @@ body {
     border-radius: 1rem;
     padding: 1rem;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+}
+
+/* На ПК - 2 столбца по 5 результатов */
+@media (min-width: 768px) {
+    .scores-list {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 0.5rem;
+        padding: 0.75rem;
+    }
+    
+    .score-item {
+        margin-bottom: 0;
+        padding: 0.6rem 0.75rem;
+    }
+    
+    .score-name {
+        font-size: 0.9rem;
+    }
+    
+    .score-moves {
+        font-size: 0.9rem;
+    }
+    
+    .score-time {
+        font-size: 0.8rem;
+    }
+    
+    .score-date {
+        font-size: 0.7rem;
+    }
+    
+    .score-rank {
+        font-size: 1.25rem;
+        width: 1.75rem;
+    }
 }
 
 .no-scores {
     color: #6b7280;
     font-size: 1.125rem;
     padding: 1rem;
+    grid-column: 1 / -1;
 }
 
 .score-item {
@@ -950,6 +990,7 @@ body {
     border-radius: 0.75rem;
     margin-bottom: 0.5rem;
     background: #fff;
+    min-width: 0;
 }
 
 .score-item:last-child {
@@ -1106,6 +1147,7 @@ body {
     
     .scores-list {
         padding: 0.75rem;
+        grid-template-columns: 1fr;
     }
     
     .score-item {
@@ -1220,6 +1262,10 @@ body {
     
     .scores-title {
         font-size: 1.1rem;
+    }
+    
+    .scores-list {
+        grid-template-columns: 1fr;
     }
     
     .score-item {

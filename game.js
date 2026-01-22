@@ -519,8 +519,6 @@ function renderBoard() {
     const isAnimatingFromHere =
       animatingFromPosition === i && animatingFrogIndex !== null;
 
-    const isAnimatingToHere = animatingToPosition === i && !frog;
-
     const frogContainer = document.createElement("div");
     frogContainer.className = "frog-container";
     frogContainer.dataset.position = i;
@@ -589,12 +587,6 @@ function renderBoard() {
       );
 
       frogContainer.appendChild(frogEl);
-    }
-
-    if (isAnimatingToHere) {
-      const highlight = document.createElement("div");
-      highlight.className = "target-highlight";
-      frogContainer.appendChild(highlight);
     }
 
     frogsContainer.appendChild(frogContainer);
